@@ -8,6 +8,7 @@ const CPU = require('os').cpus().length;
 const pipeline = promisify(stream.pipeline);
 const { spawn } = require('child_process');
 
+
 const inputFile = process.argv[2] || '';
 const outputFile = 'file.txt';
 
@@ -34,28 +35,23 @@ const processQueue = async queue => {
 
 }
 
-const processStream = async readable => {
+const processReadline = async rl => {
   try {
-    let word = '';
+    const word = '';
     const wordsArray = [];
     const queue = [];
-    for await (const chunk of readable) {
-      if(chunk.indexOf('\n') === 0) {
-        wordsArray.push(word);
-        word = '';
-        if(wordsArray.length === 100) {
-          if(queue.length < CPU) {
-            queue.push(wordsArray);
-          } else if(queue.length > CPU) {
-            queue.lenght = 0;
-          } else if(queue.length === CPU) {
-            await processQueue(queue);
-            queue.length = 0;
-          }
-          wordsArray.length = 0;
+    for await (const line of rl) {
+      wordsArray.push(line);
+      if(wordsArray.length === 100) {
+        if(queue.length < CPU) {
+          queue.push(wordsArray);
+        } else if(queue.length > CPU) {
+          queue.length = 0;
+        } else if(queue.length === CPU) {
+          await processQueue(queue);
+          queue.length = 0;
         }
-      } else {
-        word += chunk;
+        wordsArray.length = 0;
       }
     }
     if(queue.length) {
@@ -72,6 +68,44 @@ const processStream = async readable => {
   }
 }
 
+//const processStream = async readable => {
+  //try {
+    //let word = '';
+    //const wordsArray = [];
+    //const queue = [];
+    //for await (const chunk of readable) {
+      //if(chunk.indexOf('\n') === 0) {
+        //wordsArray.push(word);
+        //word = '';
+        //if(wordsArray.length === 100) {
+          //if(queue.length < CPU) {
+            //queue.push(wordsArray);
+          //} else if(queue.length > CPU) {
+            //queue.lenght = 0;
+          //} else if(queue.length === CPU) {
+            //await processQueue(queue);
+            //queue.length = 0;
+          //}
+          //wordsArray.length = 0;
+        //}
+      //} else {
+        //word += chunk;
+      //}
+    //}
+    //if(queue.length) {
+      //await processQueue(queue);
+      //queue.length = 0;
+    //}
+    //if(wordsArray.length) {
+      //await processQueue([wordsArray]);
+      //wordsArray.lenght = 0;
+    //}
+  //}
+  //catch(err) {
+    //throw err;
+  //}
+//}
+
 (async () => {
   try {
     fs.accessSync(inputFile, fs.constants.F_OK);
@@ -84,11 +118,13 @@ const processStream = async readable => {
       write
     )
 
-    const readUnzipStream = fs.createReadStream(outputFile, {
-      encoding: 'utf8',
-      highWaterMark: 1
+    const readUnzipStream = fs.createReadStream(outputFile);
+    const rl = readline.createInterface({
+      input: readUnzipStream,
     });
-    await processStream(readUnzipStream);
+    await processReadline(rl)
+
+    //await processStream(readUnzipStream);
   }
   catch(err) {
     console.log(err);

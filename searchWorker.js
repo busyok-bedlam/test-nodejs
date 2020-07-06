@@ -2,7 +2,6 @@ const FakeSearchClient = require('./search-volume-client.js');
 const keywords = JSON.parse(process.argv[2]);
 
 const getSearchValues = async keywords => {
-  debugger
   try {
     const searchClient = new FakeSearchClient();
     const resultValues = await searchClient.getSearchVolume(keywords);
