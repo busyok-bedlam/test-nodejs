@@ -68,7 +68,6 @@ const processStream = async readable => {
     }
   }
   catch(err) {
-    debugger
     throw err;
   }
 }
